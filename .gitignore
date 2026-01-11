@@ -1,0 +1,24 @@
+# Gradle/IDE artifacts
+.gradle/
+/.idea/
+/.cxx/
+/.externalNativeBuild/
+/build/
+app/build/
+
+# Android Studio / local configs
+local.properties
+/local.properties
+/captures/
+.DS_Store
+*.iml
+.attach_pid*
+
+# Android SDK
+/.android
+
+# Nix / devshell outputs
+result
+
+# Generated assets/configs
+app/src/main/assets/labels.txt
