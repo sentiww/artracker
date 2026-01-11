@@ -11,7 +11,7 @@ import com.google.ar.core.Frame
  * and returns a list of [DetectedObjectResult].
  */
 abstract class ObjectDetector(val context: Context) {
-  val yuvConverter = YuvToRgbConverter(context)
+  val yuvConverter = YuvToRgbConverter()
 
   /**
    * Infers a list of [DetectedObjectResult] given a camera image frame, which contains a confidence level,

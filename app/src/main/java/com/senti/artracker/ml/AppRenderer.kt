@@ -94,7 +94,7 @@ class AppRenderer(private val activity: MainActivity) : DefaultLifecycleObserver
     boundingBoxRender.onSurfaceCreated(render)
   }
 
-  override fun onSurfaceChanged(render: SampleRender?, width: Int, height: Int) {
+  override fun onSurfaceChanged(render: SampleRender, width: Int, height: Int) {
     displayRotationHelper.onSurfaceChanged(width, height)
   }
 

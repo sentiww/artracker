@@ -84,10 +84,11 @@ class ARCoreSessionLifecycleHelper(
     sessionCache = null
   }
 
+  @Suppress("UNUSED_PARAMETER")
   fun onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<out String>,
-    grantResults: IntArray
+    _requestCode: Int,
+    _permissions: Array<out String>,
+    _grantResults: IntArray
   ) {
     if (!CameraPermissionHelper.hasCameraPermission(activity)) {
       if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(activity)) {
