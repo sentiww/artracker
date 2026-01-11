@@ -19,6 +19,3 @@ local.properties
 
 # Nix / devshell outputs
 result
-
-# Generated assets/configs
-app/src/main/assets/labels.txt
