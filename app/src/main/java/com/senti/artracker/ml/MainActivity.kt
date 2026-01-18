@@ -22,6 +22,7 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
+import com.senti.artracker.ml.tts.TTSManager
 
 
 class MainActivity : AppCompatActivity() {
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
   lateinit var renderer: AppRenderer
   lateinit var view: MainActivityView
   private lateinit var detectionSettings: DetectionSettings
+  private lateinit var ttsManager: TTSManager
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -70,7 +72,8 @@ class MainActivity : AppCompatActivity() {
     }
     lifecycle.addObserver(arCoreSessionHelper)
 
-    renderer = AppRenderer(this)
+    ttsManager = TTSManager(this)
+    renderer = AppRenderer(this, ttsManager)
     lifecycle.addObserver(renderer)
     view = MainActivityView(this, renderer)
     setContentView(view.root)
@@ -107,6 +110,11 @@ class MainActivity : AppCompatActivity() {
       }
       else -> super.onOptionsItemSelected(item)
     }
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    ttsManager.shutdown()
   }
 
   private fun showSettingsDialog() {
@@ -153,11 +161,17 @@ class MainActivity : AppCompatActivity() {
       isChecked = detectionSettings.showPointCloud
     }
 
+    val ttsEnabledSwitch = SwitchCompat(this).apply {
+      text = getString(R.string.tts_enabled)
+      isChecked = detectionSettings.ttsEnabled
+    }
+
     container.addView(createLabeledInput(getString(R.string.detection_confidence_label), confidenceInput))
     container.addView(createLabeledInput(getString(R.string.tracker_ttl_label), ttlInput))
     container.addView(showBoxesSwitch)
     container.addView(showConfidenceSwitch)
     container.addView(showPointCloudSwitch)
+    container.addView(ttsEnabledSwitch)
 
     AlertDialog.Builder(this)
       .setTitle(R.string.settings)
@@ -179,7 +193,8 @@ class MainActivity : AppCompatActivity() {
           showConfidence = showConfidenceSwitch.isChecked,
           showPointCloud = showPointCloudSwitch.isChecked,
           detectionConfidence = confidence,
-          trackerTtlMillis = ttl
+          trackerTtlMillis = ttl,
+          ttsEnabled = ttsEnabledSwitch.isChecked
         )
         renderer.applySettings(detectionSettings)
       }

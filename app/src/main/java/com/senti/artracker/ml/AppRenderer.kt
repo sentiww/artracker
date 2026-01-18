@@ -20,6 +20,8 @@ import com.senti.artracker.ml.render.BoundingBoxRender3D
 import com.senti.artracker.ml.render.LabelRender
 import com.senti.artracker.ml.render.PointCloudRender
 import com.senti.artracker.ml.tracking.ObjectTracker
+import com.senti.artracker.ml.tts.TTSCooldownTracker
+import com.senti.artracker.ml.tts.TTSManager
 import java.util.Collections
 import kotlin.math.abs
 import kotlin.math.atan
@@ -34,8 +36,10 @@ import kotlinx.coroutines.launch
 /**
  * Renders tracked detections and AR scene objects.
  */
-class AppRenderer(private val activity: MainActivity) : DefaultLifecycleObserver, SampleRender.Renderer,
-  CoroutineScope by MainScope() {
+class AppRenderer(
+  private val activity: MainActivity,
+  private val ttsManager: TTSManager
+) : DefaultLifecycleObserver, SampleRender.Renderer, CoroutineScope by MainScope() {
 
   companion object {
     private const val MIN_BOX_SIZE = 0.05f
@@ -58,6 +62,7 @@ class AppRenderer(private val activity: MainActivity) : DefaultLifecycleObserver
   private val trackedAnchors = Collections.synchronizedMap(mutableMapOf<Int, ARTrackedAnchor>())
   private val mlKitAnalyzer = MLKitObjectDetector(activity)
   private val detectionManager: DetectionManager
+  private val ttsCooldownTracker = TTSCooldownTracker()
 
   @Volatile private var currentSettings: DetectionSettings
   @Volatile private var isProcessingImage = false
@@ -65,6 +70,7 @@ class AppRenderer(private val activity: MainActivity) : DefaultLifecycleObserver
   @Volatile private var showBoundingBoxes = true
   @Volatile private var showConfidence = true
   @Volatile private var showPointCloud = true
+  @Volatile private var ttsEnabled = true
   private var currentAnalyzer = mlKitAnalyzer
   private var currentFovX = Math.PI.toFloat() / 2f
   private var currentFovY = Math.PI.toFloat() / 2f
@@ -229,6 +235,7 @@ class AppRenderer(private val activity: MainActivity) : DefaultLifecycleObserver
     showBoundingBoxes = currentSettings.showBoundingBoxes
     showConfidence = currentSettings.showConfidence
     showPointCloud = currentSettings.showPointCloud
+    ttsEnabled = currentSettings.ttsEnabled
     currentAnalyzer = mlKitAnalyzer
   }
 
@@ -248,13 +255,29 @@ class AppRenderer(private val activity: MainActivity) : DefaultLifecycleObserver
           entry.value.trackedObject = updatedObject
         }
       }
+      val newlyDetected = mutableListOf<ObjectTracker.TrackedObject>()
       for (trackedObject in trackedObjects) {
         if (trackedAnchors.containsKey(trackedObject.id)) continue
         val (atX, atY) = trackedObject.centerCoordinate
         val anchor = createAnchor(atX.toFloat(), atY.toFloat(), frame) ?: continue
         trackedAnchors[trackedObject.id] = ARTrackedAnchor(trackedObject.id, anchor, trackedObject)
+        newlyDetected.add(trackedObject)
       }
+      handleNewDetectionsTTS(newlyDetected)
       return trackedAnchors.isNotEmpty()
+    }
+  }
+
+  private fun handleNewDetectionsTTS(newlyDetected: List<ObjectTracker.TrackedObject>) {
+    if (!ttsEnabled || newlyDetected.isEmpty()) return
+    val largest = newlyDetected.maxByOrNull { obj ->
+      obj.boundingBox.width() * obj.boundingBox.height()
+    } ?: return
+    if (ttsCooldownTracker.canSpeak(largest.label)) {
+      activity.runOnUiThread {
+        ttsManager.speak(largest.label)
+      }
+      ttsCooldownTracker.markSpoken(largest.label)
     }
   }
 

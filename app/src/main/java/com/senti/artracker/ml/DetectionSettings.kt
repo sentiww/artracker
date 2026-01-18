@@ -6,6 +6,7 @@ data class DetectionSettings(
   val showPointCloud: Boolean,
   val detectionConfidence: Float,
   val trackerTtlMillis: Long,
+  val ttsEnabled: Boolean,
 ) {
   init {
     require(detectionConfidence in 0f..1f) { "Confidence must be between 0 and 1" }
@@ -21,7 +22,8 @@ data class DetectionSettings(
       showConfidence = true,
       showPointCloud = true,
       detectionConfidence = DEFAULT_CONFIDENCE,
-      trackerTtlMillis = DEFAULT_TRACKER_TTL_MS
+      trackerTtlMillis = DEFAULT_TRACKER_TTL_MS,
+      ttsEnabled = true
     )
   }
 }
