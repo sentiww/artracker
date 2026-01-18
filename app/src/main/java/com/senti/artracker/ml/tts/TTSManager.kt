@@ -34,9 +34,8 @@ class TTSManager(context: Context) : TextToSpeech.OnInitListener {
             Log.w(TAG, "TTS not initialized yet, skipping: $label")
             return
         }
-//        val translatedText = SignLabelTranslations.translate(label)
-        val translatedText = label
-        tts.speak(translatedText, TextToSpeech.QUEUE_FLUSH, null, label)
+        val ttsText = TTSTranslationService.translate(label)
+        tts.speak(ttsText, TextToSpeech.QUEUE_FLUSH, null, label)
     }
 
     fun shutdown() {
